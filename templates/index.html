@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JARVIS AI Assistant</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tailwind Custom Theme -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',
+            dark: '#1E293B',
+            accent: '#9333EA',
+            background: '#0F172A'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Font: Inter (professional look) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #0F172A;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .card {
+      background-color: #1E293B;
+    }
+
+    .scroll-area {
+      scrollbar-color: #4B5563 transparent;
+      scrollbar-width: thin;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scroll-area::-webkit-scrollbar-thumb {
+      background-color: #4B5563;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen text-white flex items-center justify-center p-6">
+  <div class="w-full max-w-3xl">
+    <h1 class="text-4xl md:text-5xl font-bold text-center text-primary mb-8">JARVIS AI Assistant</h1>
+
+    <div class="flex justify-center gap-4 mb-6">
+      <button id="startBtn" class="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-md font-semibold transition">
+        Start
+      </button>
+      <button id="stopBtn" class="bg-accent hover:bg-purple-600 text-white px-6 py-3 rounded-md font-semibold transition">
+        Stop
+      </button>
+    </div>
+
+    <div id="status" class="text-center text-lg mb-6"></div>
+
+    <div class="card rounded-lg p-6 shadow-lg">
+      <h2 class="text-2xl font-semibold text-primary mb-4">Command History</h2>
+      <div id="history" class="space-y-4 max-h-96 overflow-y-auto scroll-area">
+        {% for item in history %}
+        <div class="p-4 bg-dark rounded-md">
+          <p><span class="font-semibold text-primary">Command:</span> {{ item.query }}</p>
+          <p><span class="font-semibold text-primary">Response:</span> {{ item.response }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('startBtn').addEventListener('click', () => {
+      fetch('/start', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('status').innerText = data.status;
+        });
+    });
+
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      fetch('/stop', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('status').innerText = data.status;
+        });
+    });
+
+    setInterval(() => {
+      fetch('/')
+        .then(response => response.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const newHistory = doc.querySelector('#history').innerHTML;
+          document.getElementById('history').innerHTML = newHistory;
+        });
+    }, 5000);
+  </script>
+</body>
+</html>
