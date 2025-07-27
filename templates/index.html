@@ -1,116 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>JARVIS AI Assistant</title>
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Tailwind Custom Theme -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#2563EB',
-            dark: '#1E293B',
-            accent: '#9333EA',
-            background: '#0F172A'
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif']
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#1e40af', // Professional blue
+                        'secondary': '#4b5563', // Neutral gray
+                        'bg-light': '#f9fafb', // Light background
+                        'bg-dark': '#1f2937', // Dark header
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
         }
-      }
-    }
-  </script>
-
-  <!-- Google Font: Inter (professional look) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    body {
-      background-color: #0F172A;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .card {
-      background-color: #1E293B;
-    }
-
-    .scroll-area {
-      scrollbar-color: #4B5563 transparent;
-      scrollbar-width: thin;
-    }
-
-    .scroll-area::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .scroll-area::-webkit-scrollbar-thumb {
-      background-color: #4B5563;
-      border-radius: 4px;
-    }
-  </style>
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        #chat-container {
+            height: 70vh;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        #chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-container::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        .message {
+            max-width: 80%;
+            margin: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background: #1e40af;
+            color: white;
+            margin-left: auto;
+        }
+        .assistant-message {
+            background: #e5e7eb;
+            color: #1f2937;
+            margin-right: auto;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-
-<body class="min-h-screen text-white flex items-center justify-center p-6">
-  <div class="w-full max-w-3xl">
-    <h1 class="text-4xl md:text-5xl font-bold text-center text-primary mb-8">JARVIS AI Assistant</h1>
-
-    <div class="flex justify-center gap-4 mb-6">
-      <button id="startBtn" class="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-md font-semibold transition">
-        Start
-      </button>
-      <button id="stopBtn" class="bg-accent hover:bg-purple-600 text-white px-6 py-3 rounded-md font-semibold transition">
-        Stop
-      </button>
-    </div>
-
-    <div id="status" class="text-center text-lg mb-6"></div>
-
-    <div class="card rounded-lg p-6 shadow-lg">
-      <h2 class="text-2xl font-semibold text-primary mb-4">Command History</h2>
-      <div id="history" class="space-y-4 max-h-96 overflow-y-auto scroll-area">
-        {% for item in history %}
-        <div class="p-4 bg-dark rounded-md">
-          <p><span class="font-semibold text-primary">Command:</span> {{ item.query }}</p>
-          <p><span class="font-semibold text-primary">Response:</span> {{ item.response }}</p>
+<body class="bg-bg-light min-h-screen flex flex-col">
+    <header class="bg-bg-dark text-white py-4 shadow-md">
+        <div class="container mx-auto px-4">
+            <h1 class="text-2xl font-bold">JARVIS AI Assistant</h1>
         </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
+    </header>
+    <main class="container mx-auto px-4 py-6 flex-grow flex flex-col">
+        <div class="flex justify-center space-x-4 mb-4">
+            <button id="startBtn" class="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-blue-800 transition">Start</button>
+            <button id="stopBtn" class="bg-secondary text-white px-4 py-2 rounded-md font-medium hover:bg-gray-700 transition">Stop</button>
+            <button id="voiceBtn" class="bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition">{{ 'Disable Voice' if voice_enabled else 'Enable Voice' }}</button>
+            <button id="clearBtn" class="bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700 transition">Clear History</button>
+        </div>
+        <div id="status" class="text-center text-secondary mb-4"></div>
+        <div id="chat-container" class="flex-grow bg-white rounded-lg shadow-md p-4 mb-4">
+            {% for item in history %}
+            <div class="message user-message">{{ item.query }}</div>
+            <div class="message assistant-message">{{ item.response }}</div>
+            {% endfor %}
+        </div>
+        <div class="flex space-x-2">
+            <input id="textCommand" type="text" placeholder="Type your command..." class="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+            <button id="sendBtn" class="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-blue-800 transition">Send</button>
+        </div>
+    </main>
+    <footer class="bg-bg-dark text-white py-2 text-center">
+        <p class="text-sm">JARVIS AI &copy; 2025</p>
+    </footer>
+    <script>
+        const apiKey = "{{ api_key }}";
+        const chatContainer = document.getElementById('chat-container');
+        const voiceBtn = document.getElementById('voiceBtn');
 
-  <script>
-    document.getElementById('startBtn').addEventListener('click', () => {
-      fetch('/start', { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById('status').innerText = data.status;
-        });
-    });
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        scrollToBottom();
 
-    document.getElementById('stopBtn').addEventListener('click', () => {
-      fetch('/stop', { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById('status').innerText = data.status;
+        // Start assistant
+        document.getElementById('startBtn').addEventListener('click', () => {
+            fetch('/start', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerText = data.status;
+                })
+                .catch(error => {
+                    document.getElementById('status').innerText = 'Error starting assistant';
+                    console.error(error);
+                });
         });
-    });
 
-    setInterval(() => {
-      fetch('/')
-        .then(response => response.text())
-        .then(html => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          const newHistory = doc.querySelector('#history').innerHTML;
-          document.getElementById('history').innerHTML = newHistory;
+        // Stop assistant
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            fetch('/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerText = data.status;
+                })
+                .catch(error => {
+                    document.getElementById('status').innerText = 'Error stopping assistant';
+                    console.error(error);
+                });
         });
-    }, 5000);
-  </script>
+
+        // Toggle voice input
+        document.getElementById('voiceBtn').addEventListener('click', () => {
+            fetch('/toggle_voice', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerText = data.status;
+                    voiceBtn.textContent = data.voice_enabled ? 'Disable Voice' : 'Enable Voice';
+                })
+                .catch(error => {
+                    document.getElementById('status').innerText = 'Error toggling voice';
+                    console.error(error);
+                });
+        });
+
+        // Clear history
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            fetch('/clear_history', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerText = data.status;
+                    chatContainer.innerHTML = '';
+                })
+                .catch(error => {
+                    document.getElementById('status').innerText = 'Error clearing history';
+                    console.error(error);
+                });
+        });
+
+        // Send text command
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const query = document.getElementById('textCommand').value.trim();
+            if (query) {
+                fetch('/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+                    body: JSON.stringify({ query: query })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        const userMsg = document.createElement('div');
+                        userMsg.className = 'message user-message';
+                        userMsg.textContent = query;
+                        chatContainer.appendChild(userMsg);
+
+                        const assistantMsg = document.createElement('div');
+                        assistantMsg.className = 'message assistant-message';
+                        assistantMsg.textContent = data.response;
+                        chatContainer.appendChild(assistantMsg);
+
+                        document.getElementById('textCommand').value = '';
+                        document.getElementById('status').innerText = 'Command sent';
+                        scrollToBottom();
+                    })
+                    .catch(error => {
+                        document.getElementById('status').innerText = 'Error sending command';
+                        console.error(error);
+                    });
+            }
+        });
+
+        // Handle Enter key for sending commands
+        document.getElementById('textCommand').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('sendBtn').click();
+            }
+        });
+
+        // Periodically refresh history
+        setInterval(() => {
+            fetch('/')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newHistory = doc.querySelector('#chat-container').innerHTML;
+                    if (newHistory !== chatContainer.innerHTML) {
+                        chatContainer.innerHTML = newHistory;
+                        scrollToBottom();
+                    }
+                })
+                .catch(error => console.error('Error refreshing history:', error));
+        }, 5000);
+    </script>
 </body>
 </html>
